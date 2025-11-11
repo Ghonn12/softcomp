@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Tugas 2 - Fuzzy Sugeno</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">Soft Computing</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Tugas 1</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/tugas2">Tugas 2</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tugas3">Tugas 3</a></li>
+        </ul>
+      </div>
+      <button id="modeToggle" class="ms-3">🌙 Mode</button>
+    </div>
+  </nav>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Tugas 2 - Logika Fuzzy Metode Sugeno</h2>
+
+    <!-- FORM INPUT -->
+    <div class="card mb-4 fade-card">
+      <div class="card-header">Masukkan Data Mahasiswa</div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">IPK:</label>
+            <input type="number" name="ipk" step="0.01" min="0" max="4" value="3.0" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Jumlah Sertifikat:</label>
+            <input type="number" name="sertifikat" min="0" max="10" value="5" class="form-control" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Hitung Kelayakan</button>
+        </form>
+      </div>
+    </div>
+
+    {% if hasil %}
+    <!-- HASIL PERHITUNGAN -->
+    <div class="card fade-card mb-4">
+      <div class="card-header">Hasil Perhitungan Sugeno</div>
+      <div class="card-body">
+        <h5>1️⃣ Fuzzifikasi</h5>
+        <ul>
+          <li>μ(IPK Rendah) = {{ hasil.μ_ipk_rendah }}</li>
+          <li>μ(IPK Sedang) = {{ hasil.μ_ipk_sedang }}</li>
+          <li>μ(IPK Tinggi) = {{ hasil.μ_ipk_tinggi }}</li>
+          <li>μ(Sertifikat Sedikit) = {{ hasil.μ_sert_sedikit }}</li>
+          <li>μ(Sertifikat Cukup) = {{ hasil.μ_sert_cukup }}</li>
+          <li>μ(Sertifikat Banyak) = {{ hasil.μ_sert_banyak }}</li>
+        </ul>
+
+        <h5>2️⃣ Aturan Fuzzy (IF–THEN)</h5>
+        <ul>
+          <li>R1: IF IPK rendah AND Sertifikat sedikit THEN z = 40</li>
+          <li>R2: IF IPK sedang AND Sertifikat cukup THEN z = 70</li>
+          <li>R3: IF IPK tinggi AND Sertifikat banyak THEN z = 90</li>
+        </ul>
+
+        <h5>3️⃣ Bobot Aturan</h5>
+        <ul>
+          <li>w1 = min(μ_rendah, μ_sedikit) = {{ hasil.w1 }}</li>
+          <li>w2 = min(μ_sedang, μ_cukup) = {{ hasil.w2 }}</li>
+          <li>w3 = min(μ_tinggi, μ_banyak) = {{ hasil.w3 }}</li>
+        </ul>
+
+        <h5>4️⃣ Defuzzifikasi (Weighted Average)</h5>
+        <p>Output = (w1*z1 + w2*z2 + w3*z3) / (w1 + w2 + w3)</p>
+        <p><b>Nilai Akhir Sugeno = {{ hasil.output_nilai }}</b></p>
+
+        <div class="alert alert-info text-center">
+          <b>Kesimpulan:</b> Mahasiswa dinyatakan <b>{{ hasil.hasil }}</b> untuk mengikuti seminar.
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ========== SCRIPT ========== -->
+  <script>
+    const toggle = document.getElementById("modeToggle");
+    const body = document.body;
+    if (localStorage.getItem("theme") === "dark") body.classList.add("dark-mode");
+
+    toggle.addEventListener("click", () => {
+      body.classList.toggle("dark-mode");
+      localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
+    });
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add("visible");
+      });
+    });
+    document.querySelectorAll(".fade-card").forEach(card => observer.observe(card));
+  </script>
+</body>
+</html>

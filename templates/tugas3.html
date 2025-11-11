@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Tugas 3 - Algoritma Genetika (Knapsack)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">Soft Computing</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Tugas 1</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tugas2">Tugas 2</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/tugas3">Tugas 3</a></li>
+        </ul>
+      </div>
+      <button id="modeToggle" class="ms-3">🌙 Mode</button>
+    </div>
+  </nav>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Tugas 3 - Algoritma Genetika (Knapsack Problem)</h2>
+
+    <!-- FORM INPUT -->
+    <div class="card mb-4 fade-card">
+      <div class="card-header">Masukkan Parameter Algoritma</div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Jumlah Generasi:</label>
+            <input type="number" name="generations" min="1" value="5" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Ukuran Populasi:</label>
+            <input type="number" name="pop_size" min="2" value="6" class="form-control" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Jalankan Algoritma</button>
+        </form>
+      </div>
+    </div>
+
+    {% if hasil %}
+    <!-- HASIL PERHITUNGAN -->
+    <div class="card fade-card mb-4">
+      <div class="card-header">Hasil Evolusi Algoritma Genetika</div>
+      <div class="card-body">
+
+        <h5>1️⃣ Proses Evolusi per Generasi</h5>
+        {% for h in hasil['history'] %}
+        <div class="mb-3">
+          <ul>
+            <li>Generasi: {{ h['generation'] }}</li>
+            <li>Kromosom terbaik: {{ h['chromosome'] }}</li>
+            <li>Item terpilih: {{ h['items'] }}</li>
+            <li>Berat total: {{ h['weight'] }}</li>
+            <li>Nilai total: {{ h['value'] }}</li>
+            <li>Fitness: {{ h['fitness'] }}</li>
+          </ul>
+        </div>
+        {% endfor %}
+
+        <h5>2️⃣ Hasil Akhir</h5>
+        <ul>
+          <li><b>Kromosom:</b> {{ hasil['best']['chromosome'] }}</li>
+          <li><b>Item terbaik:</b> {{ hasil['best']['items'] }}</li>
+          <li><b>Berat total:</b> {{ hasil['best']['weight'] }}</li>
+          <li><b>Nilai total:</b> {{ hasil['best']['value'] }}</li>
+          <li><b>Fitness akhir:</b> {{ hasil['best']['fitness'] }}</li>
+        </ul>
+
+        <div class="alert alert-info text-center">
+          <b>Kesimpulan:</b> Kombinasi terbaik menghasilkan nilai maksimum sebesar <b>{{ hasil['best']['value'] }}</b> dengan berat total <b>{{ hasil['best']['weight'] }}</b>.
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ========== SCRIPT ========== -->
+  <script>
+    const toggle = document.getElementById("modeToggle");
+    const body = document.body;
+    if (localStorage.getItem("theme") === "dark") body.classList.add("dark-mode");
+
+    toggle.addEventListener("click", () => {
+      body.classList.toggle("dark-mode");
+      localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
+    });
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add("visible");
+      });
+    });
+    document.querySelectorAll(".fade-card").forEach(card => observer.observe(card));
+  </script>
+</body>
+</html>
