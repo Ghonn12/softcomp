@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request
 import random
+import matplotlib
+matplotlib.use('Agg')  # gunakan backend non-GUI
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
@@ -170,5 +173,107 @@ def tugas3():
 
     return render_template("tugas3.html", hasil=hasil)
 
+# ====================================================
+# TUGAS 4 - ALGORITMA GENETIKA (TSP)
+# ====================================================
+import pandas as pd
+import numpy as np
+
+def route_distance(route, dist_matrix):
+    return sum(dist_matrix[route[i], route[(i+1)%len(route)]] for i in range(len(route)))
+
+def create_individual(n):
+    ind = list(range(n))
+    random.shuffle(ind)
+    return ind
+
+def initial_population(size, n):
+    return [create_individual(n) for _ in range(size)]
+
+def tournament_selection(pop, dist_matrix, k):
+    candidates = random.sample(pop, k)
+    return min(candidates, key=lambda ind: route_distance(ind, dist_matrix))
+
+def ordered_crossover(p1, p2):
+    a, b = sorted(random.sample(range(len(p1)), 2))
+    child = [-1]*len(p1)
+    child[a:b+1] = p1[a:b+1]
+    p2_idx = 0
+    for i in range(len(p1)):
+        if child[i] == -1:
+            while p2[p2_idx] in child:
+                p2_idx += 1
+            child[i] = p2[p2_idx]
+    return child
+
+def swap_mutation(ind):
+    a, b = random.sample(range(len(ind)), 2)
+    ind[a], ind[b] = ind[b], ind[a]
+
+@app.route("/tugas4", methods=["GET", "POST"])
+def tugas4():
+    hasil = None
+    if request.method == "POST":
+        generations = int(request.form["generations"])
+        pop_size = int(request.form["pop_size"])
+
+        # Load data Excel
+        df = pd.read_excel("data/3.b. TSP - AG.xlsx", index_col=0)
+        cities = list(df.index)
+        dist_matrix = df.values.astype(float)
+
+        # Parameter
+        TOURNAMENT_K = 5
+        PC = 0.9
+        PM = 0.2
+        ELITE_SIZE = 1
+
+        # Inisialisasi
+        pop = initial_population(pop_size, len(cities))
+        best = min(pop, key=lambda ind: route_distance(ind, dist_matrix))
+        best_dist = route_distance(best, dist_matrix)
+        history = []
+
+        for g in range(generations):
+            pop = sorted(pop, key=lambda ind: route_distance(ind, dist_matrix))
+            if route_distance(pop[0], dist_matrix) < best_dist:
+                best = pop[0]
+                best_dist = route_distance(best, dist_matrix)
+
+            new_pop = pop[:ELITE_SIZE]
+            while len(new_pop) < pop_size:
+                p1 = tournament_selection(pop, dist_matrix, TOURNAMENT_K)
+                p2 = tournament_selection(pop, dist_matrix, TOURNAMENT_K)
+                child = ordered_crossover(p1, p2) if random.random() < PC else p1[:]
+                if random.random() < PM:
+                    swap_mutation(child)
+                new_pop.append(child)
+            pop = new_pop
+            history.append(best_dist)
+
+        best_route = [cities[i] for i in best]
+        hasil = {
+            "route": best_route,
+            "distance": round(best_dist, 2),
+            "history": history
+        }
+
+        # Buat folder dan simpan CSV ke static/download
+        import os
+        os.makedirs("static/download", exist_ok=True)
+        pd.DataFrame({"city": best_route}).to_csv("static/download/hasil_TSP_GA.csv", index=False)
+
+        # Simpan grafik ke static/
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.plot(history)
+        plt.xlabel("Generasi")
+        plt.ylabel("Jarak Terbaik")
+        plt.title("Perkembangan Solusi TSP")
+        plt.tight_layout()
+        plt.savefig("static/tsp_progress.png")
+
+    return render_template("tugas4.html", hasil=hasil)
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
